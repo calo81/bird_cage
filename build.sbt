@@ -40,5 +40,6 @@ lazy val root = project
 
     scalacOptions := Seq(
 
-    )
+    ),
+    mainClass in (Compile, run) := Some("org.cacique.kafka_happenings.Main")
   )

@@ -27,7 +27,21 @@ import sangria.http.akka.circe.CirceHttpSupport
 class MainApp
 
 object Main extends App {
+  val printingHook = new Thread(() => System.out.println("In the middle of a shutdown"))
+  Runtime.getRuntime.addShutdownHook(printingHook)
+  println("Starting the Application")
   SpringApplication.run(classOf[MainApp])
+  while (true) {
+    println("heartbeat!")
+    try{
+      Thread.sleep(60000)
+    }catch {
+      case e: InterruptedException => {
+        println("Shutdown executed")
+        System.exit(0)
+      }
+    }
+  }
 }
 
 @Component
