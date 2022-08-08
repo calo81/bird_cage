@@ -32,6 +32,8 @@ case class Cluster(
                   brokers: List[Broker],
                   properties: Properties)
 
+case class Topic(name: String)
+
 case class Broker(id: String)
 
 trait CharacterRepo {

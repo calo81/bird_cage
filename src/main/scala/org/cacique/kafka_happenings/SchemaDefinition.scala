@@ -117,6 +117,16 @@ object SchemaDefinition {
         Field("brokers", ListType(Broker), resolve = _.value.brokers),
       ))
 
+  val Topic: ObjectType[CharacterRepo, Topic] =
+    ObjectType(
+      "Topic",
+      "A Topic",
+      () => fields[CharacterRepo, Topic](
+        Field("name", StringType,
+          Some("The name of the topic."),
+          resolve = _.value.name),
+      ))
+
   val ID: Argument[String] = Argument("id", StringType, description = "id of the character")
 
   val EpisodeArg: Argument[Option[Episode.Value]] = Argument("episode", OptionInputType(EpisodeEnum),
@@ -145,7 +155,10 @@ object SchemaDefinition {
         resolve = ctx => ctx.ctx.getDroids(ctx arg LimitArg, ctx arg OffsetArg)),
       Field("cluster", OptionType(Cluster),
         arguments = Nil,
-        resolve = ctx => ctx.ctx.getCluster())
+        resolve = ctx => ctx.ctx.getCluster()),
+      Field("topics", ListType(Topic),
+        arguments = Nil,
+        resolve = ctx => ctx.ctx.getTopics()),
     ))
 
   val StarWarsSchema: Schema[EntryPointServiceImpl, Unit] = Schema(Query)

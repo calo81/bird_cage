@@ -9,24 +9,24 @@ import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LayersIcon from '@mui/icons-material/Layers';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import AppsIcon from '@mui/icons-material/Apps';
 import Cluster from "./Cluster";
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import { Link } from "react-router-dom";
 
 export function mainListItems(selectWindow) {
 
     return (
         <React.Fragment>
-            <ListItemButton onClick={(event) => {
-                selectWindow("cluster")
-
-            }}>
+            <ListItemButton component={Link} to="/cluster">
                 <ListItemIcon>
-                    <DashboardIcon/>
+                    <AppsIcon/>
                 </ListItemIcon>
                 <ListItemText primary="Cluster"/>
             </ListItemButton>
-            <ListItemButton>
+            <ListItemButton component={Link} to="/topics">
                 <ListItemIcon>
-                    <ShoppingCartIcon/>
+                    <FormatListBulletedIcon/>
                 </ListItemIcon>
                 <ListItemText primary="Topics"/>
             </ListItemButton>

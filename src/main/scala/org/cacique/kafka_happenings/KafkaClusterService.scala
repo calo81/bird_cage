@@ -8,10 +8,7 @@ import scala.jdk.CollectionConverters._
 trait KafkaClusterService {
    val kafkaUrl: String
    def getCluster(): Cluster = {
-     val properties = new java.util.Properties()
-     properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaUrl)
-
-     val adminClient = AdminClient.create(properties)
+     val adminClient = getAdminClient()
 
      val clusterResult = adminClient.describeCluster()
 
@@ -23,4 +20,22 @@ trait KafkaClusterService {
      Cluster(id = clusterId, brokers = brokers, properties = Properties(List()))
 
    }
+
+  def getTopics(): List[Topic] = {
+    val adminClient = getAdminClient()
+    val topicListings = adminClient.listTopics().listings().get()
+    topicListings
+      .stream()
+      .map(topicListing => Topic(topicListing.name()))
+      .toList
+      .asScala
+      .toList
+  }
+
+  private def getAdminClient(): AdminClient = {
+    val properties = new java.util.Properties()
+    properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaUrl)
+
+    AdminClient.create(properties)
+  }
 }

@@ -6,30 +6,25 @@ import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import Title from './Title';
 
-const GET_CLUSTER = gql`
+const GET_TOPIC= gql`
 
 query {
-  cluster {
-    id
-    brokers {
-      id
-    }
+  topics {
+    name
   }
 }
 
 `;
 
-
-
-export default function Cluster(props) {
+export default function Topic(props) {
 
     async function refresh(event) {
         await client.refetchQueries({
-            include: [GET_CLUSTER],
+            include: [GET_TOPIC],
         });
     }
 
-    const {loading, error, data} = useQuery(GET_CLUSTER);
+    const {loading, error, data} = useQuery(GET_TOPICS);
     const {client} = useContext(getApolloContext())
 
     if (loading) return null;
@@ -38,23 +33,17 @@ export default function Cluster(props) {
 
     return (
         <div>
-            <Title>Kafka Cluster</Title>
-            <Typography component="p" variant="h4">
-                ID: {data?.cluster.id}
-            </Typography>
+            <Title>Topic</Title>
             <div>
-                <Typography color="text.secondary" sx={{flex: 1}}>
-                    Brokers:
-                </Typography>
-                {data?.cluster.brokers.map((broker) => (
-                    <div key={broker.id}>
-                        <li>{broker.id}</li>
+                {data?.topics.map((topic) => (
+                    <div key={topic.name}>
+                        <li>{topic.name}</li>
                     </div>
                 ))}
             </div>
             <div>
                 <Link color="primary" href="#" onClick={refresh}>
-                   Refresh
+                    Refresh
                 </Link>
             </div>
         </div>
