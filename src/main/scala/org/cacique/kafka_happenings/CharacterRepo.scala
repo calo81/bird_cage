@@ -37,6 +37,7 @@ case class Topic(name: String)
 case class Broker(id: String)
 
 trait CharacterRepo {
+
   import CharacterRepo._
 
   def getHero(episode: Option[Episode.Value]): Character =

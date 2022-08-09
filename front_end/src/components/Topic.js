@@ -1,16 +1,17 @@
 import {useQuery, useLazyQuery, gql} from '@apollo/client';
 import {getApolloContext} from '@apollo/client';
-import React, {useContext} from "react";
+import {useSubscription} from '@apollo/client';
+import React, {useContext, useState} from "react";
 // import * as React from 'react';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import Title from './Title';
 
-const GET_TOPIC= gql`
+const GET_TOPIC = gql`
 
-query {
-  topics {
-    name
+subscription {
+  kafkaEvents {
+    offset
   }
 }
 
@@ -18,35 +19,34 @@ query {
 
 export default function Topic(props) {
 
+    function addData(data) {
+        events.push(data.subscriptionData.data)
+        setEvents(events)
+        console.log(data)
+    }
+
     async function refresh(event) {
         await client.refetchQueries({
             include: [GET_TOPIC],
         });
     }
 
-    const {loading, error, data} = useQuery(GET_TOPICS);
+    const [events, setEvents] = useState([]);
+
+    const {loading, error, data} = useSubscription(GET_TOPIC, {
+        variables: {},
+        shouldResubscribe: false,
+        skip: false,
+        onSubscriptionData: addData
+    });
     const {client} = useContext(getApolloContext())
 
-    if (loading) return null;
-    if (error) return `Error! ${error}`;
-    console.log(client)
+    console.log({data, loading, error});
+    if (error) {
+        return <h4>Error</h4>;
+    }
+    return <h4>{events.map(event => (
+        <div key={event.kafkaEvents.offset}>{event.kafkaEvents.offset}</div>
+    ))}</h4>
 
-    return (
-        <div>
-            <Title>Topic</Title>
-            <div>
-                {data?.topics.map((topic) => (
-                    <div key={topic.name}>
-                        <li>{topic.name}</li>
-                    </div>
-                ))}
-            </div>
-            <div>
-                <Link color="primary" href="#" onClick={refresh}>
-                    Refresh
-                </Link>
-            </div>
-        </div>
-
-    );
 }

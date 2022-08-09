@@ -1307,6 +1307,21 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
+"@graphql-sse/apollo-client@^0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@graphql-sse/apollo-client/-/apollo-client-0.0.18.tgz#0d82c282efe8a4993033000670775033016f0aab"
+  integrity sha512-V1tjP+T1pveN94Tgq5cV2Xwdxspke757U3ZLxfXzEaAOPyxIm4kr4aYR+ChLCha81S1yDZvNQC5GjWBFoGPDdg==
+  dependencies:
+    "@graphql-sse/client" "^0.0.16"
+    graphql "^15.5.3"
+
+"@graphql-sse/client@^0.0.16":
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/@graphql-sse/client/-/client-0.0.16.tgz#31b39d65348d3b58748eb5f16e7e4f2438a27e75"
+  integrity sha512-PIxErxLQmrDB/3ooQwuo6o35+IJw1F4syf3uk/WPHSRkMLtXx33TZzggyAqm5vYVS5GD4hTOPhgd8h3X0eNLkQ==
+  dependencies:
+    "@microsoft/fetch-event-source" "^2.0.1"
+
 "@graphql-typed-document-node/core@^3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.1.1.tgz#076d78ce99822258cf813ecc1e7fa460fa74d052"
@@ -1614,6 +1629,11 @@
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
+
+"@microsoft/fetch-event-source@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@microsoft/fetch-event-source/-/fetch-event-source-2.0.1.tgz#9ceecc94b49fbaa15666e38ae8587f64acce007d"
+  integrity sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==
 
 "@mui/base@5.0.0-alpha.92":
   version "5.0.0-alpha.92"
@@ -4945,6 +4965,11 @@ graphql-tag@^2.12.6:
   integrity sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==
   dependencies:
     tslib "^2.1.0"
+
+graphql@^15.5.3:
+  version "15.8.0"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.8.0.tgz#33410e96b012fa3bdb1091cc99a94769db212b38"
+  integrity sha512-5gghUc24tP9HRznNpV2+FIoq3xKkj5dTQqf4v0CpdPbFVwFkWoxOM+o+2OC9ZSvjEMTjfmG9QT+gcvggTwW1zw==
 
 graphql@^16.5.0:
   version "16.5.0"

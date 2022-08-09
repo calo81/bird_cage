@@ -27,6 +27,7 @@ import Chart from './Chart';
 import Deposits from './Deposits';
 import Topics from './Topics';
 import Cluster from "./Cluster";
+import Topic from "./Topic";
 
 function Copyright(props) {
     return (
@@ -207,6 +208,7 @@ function DashboardContent() {
                                                 <Route path="/cluster" element={<Cluster />}/>
                                                 <Route path="/" element={<Cluster />}/>
                                                 <Route path="/topics" element={<Topics />}/>
+                                                <Route path="/events" element={<Topic />}/>
                                             </Routes>
                                         </Paper>
                                     </Grid>

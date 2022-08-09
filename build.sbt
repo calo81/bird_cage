@@ -23,6 +23,8 @@ lazy val root = project
 
       "org.sangria-graphql" % "sangria-akka-http-core_2.13" % sangriaAkkaHttpVersion,
       "org.sangria-graphql" % "sangria-akka-http-circe_2.13" % sangriaAkkaHttpVersion,
+      "org.sangria-graphql" % "sangria-streaming-api_2.13" % "1.0.3",
+      "org.sangria-graphql" % "sangria-akka-streams_2.13" % "1.0.2",
 
       "com.typesafe.akka" % "akka-http_2.13" % "10.2.4",
       "com.typesafe.akka" % "akka-actor_2.13" % akkaVersion,

@@ -30,11 +30,11 @@ export function mainListItems(selectWindow) {
                 </ListItemIcon>
                 <ListItemText primary="Topics"/>
             </ListItemButton>
-            <ListItemButton>
+            <ListItemButton  component={Link} to="/events">
                 <ListItemIcon>
                     <PeopleIcon/>
                 </ListItemIcon>
-                <ListItemText primary="Consumers"/>
+                <ListItemText primary="Events"/>
             </ListItemButton>
             <ListItemButton>
                 <ListItemIcon>

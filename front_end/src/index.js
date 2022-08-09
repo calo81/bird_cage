@@ -3,10 +3,32 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { ApolloClient, InMemoryCache, ApolloProvider, gql } from '@apollo/client';
+import { split, HttpLink, ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { ServerSentEventsLink } from '@graphql-sse/apollo-client';
+
+const httpLink = new HttpLink({
+    uri: 'http://localhost:8282/graphql',
+});
+
+const sseLink = new ServerSentEventsLink({
+    graphQlSubscriptionUrl: 'http://localhost:8282/graphql',
+});
+
+const splitLink = split(
+    ({ query }) => {
+        const definition = getMainDefinition(query);
+        return (
+            definition.kind === 'OperationDefinition' &&
+            definition.operation === 'subscription'
+        );
+    },
+    sseLink,
+    httpLink
+);
 
 const client = new ApolloClient({
-    uri: 'http://localhost:8282/graphql',
+    link: splitLink,
     cache: new InMemoryCache(),
 });
 

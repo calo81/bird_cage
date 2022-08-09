@@ -1,8 +1,12 @@
 package org.cacique.kafka_happenings
 
+import akka.NotUsed
+import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.Source
 import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+
 import scala.jdk.CollectionConverters._
 
 trait KafkaClusterService {
@@ -31,6 +35,9 @@ trait KafkaClusterService {
       .asScala
       .toList
   }
+
+  lazy val eventStream: Source[KafkaEvent, NotUsed] =
+    Source.fromIterator(() => List(KafkaEvent("1", "a"), KafkaEvent("2", "b")).iterator).buffer(1, OverflowStrategy.fail)
 
   private def getAdminClient(): AdminClient = {
     val properties = new java.util.Properties()
