@@ -10,20 +10,22 @@ import org.springframework.stereotype.Service
 import scala.jdk.CollectionConverters._
 
 trait KafkaClusterService {
-   val kafkaUrl: String
-   def getCluster(): Cluster = {
-     val adminClient = getAdminClient()
+  val kafkaUrl: String
+  val kafkaConsumer: KafkaConsumerFactory
 
-     val clusterResult = adminClient.describeCluster()
+  def getCluster(): Cluster = {
+    val adminClient = getAdminClient()
+
+    val clusterResult = adminClient.describeCluster()
 
 
-     val clusterId = clusterResult.clusterId().get()
-     val nodes = clusterResult.nodes().get()
-     val brokers = nodes.stream().map(n => Broker(id=n.id().toString)).toList.asScala.toList
+    val clusterId = clusterResult.clusterId().get()
+    val nodes = clusterResult.nodes().get()
+    val brokers = nodes.stream().map(n => Broker(id = n.id().toString)).toList.asScala.toList
 
-     Cluster(id = clusterId, brokers = brokers, properties = Properties(List()))
+    Cluster(id = clusterId, brokers = brokers, properties = Properties(List()))
 
-   }
+  }
 
   def getTopics(): List[Topic] = {
     val adminClient = getAdminClient()
@@ -36,8 +38,16 @@ trait KafkaClusterService {
       .toList
   }
 
-  lazy val eventStream: Source[KafkaEvent, NotUsed] =
-    Source.fromIterator(() => List(KafkaEvent("1", "a"), KafkaEvent("2", "b")).iterator).buffer(1, OverflowStrategy.fail)
+  def eventStream: Source[KafkaEvent, NotUsed] = {
+    val properties = Properties(List(
+      Property("bootstrap.servers", "localhost:9092"),
+      Property("group.id", "kh_group")
+    ))
+    kafkaConsumer
+      .executeConsumer(properties, "test_topic")
+      .map(s => Source.fromJavaStream(() => s).filter(_.isDefined).map(_.get))
+      .getOrElse(Source.fromIterator(() => List(KafkaEvent("1", "a"), KafkaEvent("2", "b")).iterator).buffer(1, OverflowStrategy.fail))
+  }
 
   private def getAdminClient(): AdminClient = {
     val properties = new java.util.Properties()

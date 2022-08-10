@@ -8,7 +8,8 @@ trait EntryPointService {
 }
 
 @Service
-class EntryPointServiceImpl(@Value("${kafka.url}") val kafkaUrl: String) extends EntryPointService
+class EntryPointServiceImpl(@Value("${kafka.url}") val kafkaUrl: String,
+                            @Autowired val kafkaConsumer: KafkaConsumerFactory) extends EntryPointService
   with KafkaClusterService
   with CharacterRepo {
 
