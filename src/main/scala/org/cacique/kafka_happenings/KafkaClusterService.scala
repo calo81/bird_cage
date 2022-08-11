@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 import scala.jdk.CollectionConverters._
+import scala.util.Random
 
 trait KafkaClusterService {
   val kafkaUrl: String
@@ -41,7 +42,7 @@ trait KafkaClusterService {
   def eventStream: Source[KafkaEvent, NotUsed] = {
     val properties = Properties(List(
       Property("bootstrap.servers", "localhost:9092"),
-      Property("group.id", "kh_group")
+      Property("group.id", s"kh_${Random.alphanumeric.take(10).mkString}")
     ))
     kafkaConsumer
       .executeConsumer(properties, "test_topic")

@@ -9,8 +9,8 @@ import Title from './Title';
 
 const GET_TOPIC = gql`
 
-subscription {
-  kafkaEvents {
+subscription KafkaEvents($topic: String!) {
+  kafkaEvents(topic: $topic) {
     offset
   }
 }
@@ -20,22 +20,22 @@ subscription {
 export default function Topic(props) {
 
     function addData(data) {
+        console.log(topic)
         events.push(data.subscriptionData.data)
         setEvents(events)
-        console.log(data)
+
+
     }
 
-    async function refresh(event) {
-        await client.refetchQueries({
-            include: [GET_TOPIC],
-        });
+    function changeTopic(event) {
+        setTopic("fff")
     }
 
     const [events, setEvents] = useState([]);
-
+    const [topic, setTopic] = useState("*")
     const {loading, error, data} = useSubscription(GET_TOPIC, {
-        variables: {},
-        shouldResubscribe: false,
+        variables: {topic: topic},
+        shouldResubscribe: true,
         skip: false,
         onSubscriptionData: addData
     });
@@ -43,10 +43,21 @@ export default function Topic(props) {
 
     console.log({data, loading, error});
     if (error) {
-        return <h4>Error</h4>;
+        return <h4>Error Fetching Data </h4>;
     }
-    return <h4>{events.map(event => (
-        <div key={event.kafkaEvents.offset}>{event.kafkaEvents.offset}</div>
-    ))}</h4>
+    return <div>
+        <div>
+            <h4>{events.map(event => (
+                <div key={event.kafkaEvents.offset}>{event.kafkaEvents.offset}</div>
+            ))}</h4>
+        </div>
+        <div>
+            <div>
+                <Link color="primary" href="#" onClick={changeTopic}>
+                    Refresh
+                </Link>
+            </div>
+        </div>
+    </div>
 
 }

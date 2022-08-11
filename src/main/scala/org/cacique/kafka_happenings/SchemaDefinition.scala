@@ -151,14 +151,21 @@ object SchemaDefinition {
             resolve = _.value.offset),
         ))
 
+    val ID: Argument[String] = Argument("id", StringType, description = "id of the character")
+
+    val TOPIC: Argument[String] = Argument("topic", StringType, description = "topic to subscribe to")
+
     val SubscriptionType = ObjectType("Subscription", fields[EntryPointServiceImpl, Unit](
-      Field.subs("kafkaEvents", KafkaEventType, resolve = (c: Context[EntryPointServiceImpl, Unit]) =>
+      Field.subs("kafkaEvents",
+        KafkaEventType,
+        arguments = TOPIC :: Nil,
+        resolve = (c: Context[EntryPointServiceImpl, Unit]) =>
         c.ctx.eventStream.map(event => Action(event))
       )
     )
     )
 
-    val ID: Argument[String] = Argument("id", StringType, description = "id of the character")
+
 
     val EpisodeArg: Argument[Option[Episode.Value]] = Argument("episode", OptionInputType(EpisodeEnum),
       description = "If omitted, returns the hero of the whole saga. If provided, returns the hero of that particular episode.")

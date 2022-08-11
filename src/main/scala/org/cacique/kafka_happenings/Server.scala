@@ -25,6 +25,7 @@ import sangria.marshalling.circe._
 import javax.annotation.PostConstruct
 import scala.util.control.NonFatal
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+import akka.http.scaladsl.model.headers.HttpCookiePair
 
 // This is the trait that makes `graphQLPlayground and prepareGraphQLRequest` available
 import sangria.http.akka.circe.CirceHttpSupport
@@ -73,62 +74,71 @@ class Server(@Autowired service: EntryPointServiceImpl) extends CorsSupport with
       middleware = middleware,
       deferredResolver = deferredResolver
     )
-    val route: Route =
+    val route: Route = {
+
       optionalHeaderValueByName("X-Apollo-Tracing") { tracing =>
-        path("graphql") {
-          graphQLPlayground ~
-            prepareGraphQLRequest {
-              case Success(req) =>
-                req.query.operationType(req.operationName) match {
-                  case Some(OperationType.Subscription) ⇒
-                    import sangria.execution.ExecutionScheme.Stream
-                    import sangria.streaming.akkaStreams._
+        optionalCookie("customer") { maybeCookie: Option[HttpCookiePair] =>
+          val cookie: HttpCookiePair = maybeCookie.getOrElse(HttpCookiePair("customer", "yy"))
 
-                    complete(
-                      executor.prepare(req.query, service, (), req.operationName, req.variables)
-                        .map { preparedQuery ⇒
-                          ToResponseMarshallable(preparedQuery.execute()
-                            .map{result ⇒
-                              println(s"Found result ${result}")
-                              ServerSentEvent(result.noSpaces)
+          setCookie(cookie.toCookie()) {
+
+            path("graphql") {
+              graphQLPlayground ~
+                prepareGraphQLRequest {
+                  case Success(req) =>
+                    req.query.operationType(req.operationName) match {
+                      case Some(OperationType.Subscription) ⇒
+                        import sangria.execution.ExecutionScheme.Stream
+                        import sangria.streaming.akkaStreams._
+
+                        complete(
+                          executor.prepare(req.query, service, (), req.operationName, req.variables)
+                            .map { preparedQuery ⇒
+                              ToResponseMarshallable(preparedQuery.execute()
+                                .map { result ⇒
+                                  println(s"Found result ${result}")
+                                  ServerSentEvent(result.noSpaces)
+                                }
+                                .recover { case NonFatal(error) ⇒
+                                  println(error, "Unexpected error during event stream processing.")
+                                  ServerSentEvent(error.getMessage)
+                                })
                             }
-                            .recover { case NonFatal(error) ⇒
-                              println(error, "Unexpected error during event stream processing.")
-                              ServerSentEvent(error.getMessage)
+                            .recover {
+                              case error: QueryAnalysisError ⇒
+                                error.printStackTrace()
+                                ToResponseMarshallable(BadRequest → error.resolveError)
+                              case error: ErrorWithResolver ⇒
+                                error.printStackTrace()
+                                ToResponseMarshallable(InternalServerError → error.resolveError)
                             })
-                        }
-                        .recover {
-                          case error: QueryAnalysisError ⇒
-                            error.printStackTrace()
-                            ToResponseMarshallable(BadRequest → error.resolveError)
-                          case error: ErrorWithResolver ⇒
-                            error.printStackTrace()
-                            ToResponseMarshallable(InternalServerError → error.resolveError)
-                        })
 
-                  case _ =>
-                    val graphQLResponse = executor.execute(
-                      queryAst = req.query,
-                      userContext = service,
-                      variables = req.variables,
-                      operationName = req.operationName,
-                      root = ()
-                    ).map(OK -> _)
-                      .recover {
-                        case error: QueryAnalysisError => BadRequest -> error.resolveError
-                        case error: ErrorWithResolver => InternalServerError -> error.resolveError
-                      }
-                    complete(graphQLResponse)
+                      case _ =>
+                        val graphQLResponse = executor.execute(
+                          queryAst = req.query,
+                          userContext = service,
+                          variables = req.variables,
+                          operationName = req.operationName,
+                          root = ()
+                        ).map(OK -> _)
+                          .recover {
+                            case error: QueryAnalysisError => BadRequest -> error.resolveError
+                            case error: ErrorWithResolver => InternalServerError -> error.resolveError
+                          }
+                        complete(graphQLResponse)
+                    }
+
+
+                  case Failure(preparationError) => complete(BadRequest, formatError(preparationError))
                 }
-
-
-              case Failure(preparationError) => complete(BadRequest, formatError(preparationError))
             }
+          }
         }
       } ~
         (get & pathEndOrSingleSlash) {
           redirect("/graphql", PermanentRedirect)
         }
+    }
 
 
     val PORT = sys.props.get("http.port").fold(8282)(_.toInt)

@@ -9,7 +9,8 @@ import akka.http.scaladsl.server.{Directive0, Route}
 trait CorsSupport {
   private def addAccessControlHeaders: Directive0 =
     respondWithHeaders(
-      `Access-Control-Allow-Origin`.*,
+      `Access-Control-Allow-Origin`("http://localhost:3000"),
+//      `Access-Control-Allow-Origin`.*,
       `Access-Control-Allow-Credentials`(true),
       `Access-Control-Allow-Headers`("Authorization", "Content-Type", "X-Requested-With")
     )

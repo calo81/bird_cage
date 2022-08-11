@@ -9,10 +9,12 @@ import { ServerSentEventsLink } from '@graphql-sse/apollo-client';
 
 const httpLink = new HttpLink({
     uri: 'http://localhost:8282/graphql',
+    credentials: 'include'
 });
 
 const sseLink = new ServerSentEventsLink({
     graphQlSubscriptionUrl: 'http://localhost:8282/graphql',
+    credentials: 'include'
 });
 
 const splitLink = split(
@@ -30,6 +32,7 @@ const splitLink = split(
 const client = new ApolloClient({
     link: splitLink,
     cache: new InMemoryCache(),
+    credentials: 'include'
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

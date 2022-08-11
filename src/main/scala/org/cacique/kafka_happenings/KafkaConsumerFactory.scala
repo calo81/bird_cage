@@ -3,6 +3,7 @@ package org.cacique.kafka_happenings
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.springframework.context.annotation.{Bean, Configuration}
 import org.springframework.stereotype.Component
 
 import java.time.Duration
@@ -21,6 +22,7 @@ class EventSupplier extends Supplier[Option[KafkaEvent]] {
     if(value == null){
       return None
     }
+    println(s"Getting message from queue ${value}")
     value
   }
 
@@ -41,8 +43,7 @@ class KafkaConsumerFactory {
 
   def executeConsumer(properties: Properties, topic: String): Option[java.util.stream.Stream[Option[KafkaEvent]]] = {
     this.properties = Properties(this.properties.properties.appendedAll(properties.properties))
-    consumer.foreach(_.wakeup())
-    consumer = Some(new KafkaConsumer[String, String](this.properties.asJavaProperties()))
+    val consumer = Some(new KafkaConsumer[String, String](this.properties.asJavaProperties()))
     consumer.map { consumer =>
       consumer.subscribe(Collections.singletonList(topic))
       consume(consumer)
