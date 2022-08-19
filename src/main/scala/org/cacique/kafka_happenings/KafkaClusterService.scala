@@ -7,6 +7,7 @@ import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+import java.util.concurrent.ConcurrentHashMap
 import scala.jdk.CollectionConverters._
 import scala.util.Random
 
@@ -39,13 +40,13 @@ trait KafkaClusterService {
       .toList
   }
 
-  def eventStream: Source[KafkaEvent, NotUsed] = {
+  def eventStream(cookieValue: String): Source[KafkaEvent, NotUsed] = {
     val properties = Properties(List(
       Property("bootstrap.servers", "localhost:9092"),
-      Property("group.id", s"kh_${Random.alphanumeric.take(10).mkString}")
+      Property("group.id", s"kh_${cookieValue}")
     ))
     kafkaConsumer
-      .executeConsumer(properties, "test_topic")
+      .executeConsumer(properties, "test_topic", cookieValue)
       .map(s => Source.fromJavaStream(() => s).filter(_.isDefined).map(_.get))
       .getOrElse(Source.fromIterator(() => List(KafkaEvent("1", "a"), KafkaEvent("2", "b")).iterator).buffer(1, OverflowStrategy.fail))
   }

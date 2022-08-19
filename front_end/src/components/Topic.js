@@ -21,9 +21,10 @@ export default function Topic(props) {
 
     function addData(data) {
         console.log(topic)
-        events.push(data.subscriptionData.data)
+        if (data.subscriptionData.data.kafkaEvents.offset != "-1") {
+            events.push(data.subscriptionData.data)
+        }
         setEvents(events)
-
 
     }
 
@@ -35,7 +36,7 @@ export default function Topic(props) {
     const [topic, setTopic] = useState("*")
     const {loading, error, data} = useSubscription(GET_TOPIC, {
         variables: {topic: topic},
-        shouldResubscribe: true,
+        shouldResubscribe: false,
         skip: false,
         onSubscriptionData: addData
     });
@@ -43,7 +44,14 @@ export default function Topic(props) {
 
     console.log({data, loading, error});
     if (error) {
-        return <h4>Error Fetching Data </h4>;
+        return <div>
+            <h4>Error Fetching Data </h4>
+            <div>
+                <Link color="primary" href="#" onClick={changeTopic}>
+                    Refresh
+                </Link>
+            </div>
+        </div>;
     }
     return <div>
         <div>

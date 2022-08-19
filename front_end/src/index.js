@@ -5,15 +5,37 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { split, HttpLink, ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { ServerSentEventsLink } from '@graphql-sse/apollo-client';
+
+import { ApolloLink, Observable, } from '@apollo/client/core';
+import { print } from 'graphql';
+import { createClient } from 'graphql-sse';
+
+class SSELink extends ApolloLink {
+    constructor(options) {
+        super();
+        this.client = createClient(options);
+    }
+    request(operation) {
+        return new Observable((sink) => {
+            return this.client.subscribe(Object.assign(Object.assign({}, operation), { query: print(operation.query) }), {
+                next: sink.next.bind(sink),
+                complete: sink.complete.bind(sink),
+                error: sink.error.bind(sink),
+            });
+        });
+    }
+}
+const sseLink = new SSELink({
+    url: 'http://localhost:8282/graphql',
+    onMessage: console.log,
+    credentials: 'include',
+    headers: () => {
+            return {"Content-Type": "application/json"};
+    },
+});
 
 const httpLink = new HttpLink({
     uri: 'http://localhost:8282/graphql',
-    credentials: 'include'
-});
-
-const sseLink = new ServerSentEventsLink({
-    graphQlSubscriptionUrl: 'http://localhost:8282/graphql',
     credentials: 'include'
 });
 

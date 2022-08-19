@@ -28,11 +28,11 @@ object SchemaDefinition {
    * cached for the duration of a query.
    */
 
-  lazy val characters: Fetcher[CharacterRepo, Character with Product with Serializable, Character with Product with Serializable, String] = Fetcher.caching(
-    (ctx: CharacterRepo, ids: Seq[String]) =>
-      Future.successful(ids.flatMap(id => ctx.getHuman(id) orElse ctx.getDroid(id))))(HasId(_.id))
+  lazy val characters: Fetcher[RequestContext, Character with Product with Serializable, Character with Product with Serializable, String] = Fetcher.caching(
+    (ctx: RequestContext, ids: Seq[String]) =>
+      Future.successful(ids.flatMap(id => ctx.entryPointService.getHuman(id) orElse ctx.entryPointService.getDroid(id))))(HasId(_.id))
 
-  def createSchema(implicit materializer: Materializer): Schema[EntryPointServiceImpl, Unit] = {
+  def createSchema(implicit materializer: Materializer): Schema[RequestContext, Unit] = {
 
     val EpisodeEnum: EnumType[Episode.Value] = EnumType(
       "Episode",
@@ -155,11 +155,11 @@ object SchemaDefinition {
 
     val TOPIC: Argument[String] = Argument("topic", StringType, description = "topic to subscribe to")
 
-    val SubscriptionType = ObjectType("Subscription", fields[EntryPointServiceImpl, Unit](
+    val SubscriptionType = ObjectType("Subscription", fields[RequestContext, Unit](
       Field.subs("kafkaEvents",
         KafkaEventType,
         arguments = TOPIC :: Nil,
-        resolve = (c: Context[EntryPointServiceImpl, Unit]) =>
+        resolve = (c: Context[RequestContext, Unit]) =>
         c.ctx.eventStream.map(event => Action(event))
       )
     )
@@ -173,30 +173,30 @@ object SchemaDefinition {
     val LimitArg: Argument[Int] = Argument("limit", OptionInputType(IntType), defaultValue = 20)
     val OffsetArg: Argument[Int] = Argument("offset", OptionInputType(IntType), defaultValue = 0)
 
-    val Query: ObjectType[EntryPointServiceImpl, Unit] = ObjectType(
-      "Query", fields[EntryPointServiceImpl, Unit](
+    val Query: ObjectType[RequestContext, Unit] = ObjectType(
+      "Query", fields[RequestContext, Unit](
         Field("hero", Character,
           arguments = EpisodeArg :: Nil,
           deprecationReason = Some("Use `human` or `droid` fields instead"),
-          resolve = ctx => ctx.ctx.getHero(ctx.arg(EpisodeArg))),
+          resolve = ctx => ctx.ctx.entryPointService.getHero(ctx.arg(EpisodeArg))),
         Field("human", OptionType(Human),
           arguments = ID :: Nil,
-          resolve = ctx => ctx.ctx.getHuman(ctx arg ID)),
+          resolve = ctx => ctx.ctx.entryPointService.getHuman(ctx arg ID)),
         Field("droid", Droid,
           arguments = ID :: Nil,
-          resolve = ctx => ctx.ctx.getDroid(ctx arg ID).get),
+          resolve = ctx => ctx.ctx.entryPointService.getDroid(ctx arg ID).get),
         Field("humans", ListType(Human),
           arguments = LimitArg :: OffsetArg :: Nil,
-          resolve = ctx => ctx.ctx.getHumans(ctx arg LimitArg, ctx arg OffsetArg)),
+          resolve = ctx => ctx.ctx.entryPointService.getHumans(ctx arg LimitArg, ctx arg OffsetArg)),
         Field("droids", ListType(Droid),
           arguments = LimitArg :: OffsetArg :: Nil,
-          resolve = ctx => ctx.ctx.getDroids(ctx arg LimitArg, ctx arg OffsetArg)),
+          resolve = ctx => ctx.ctx.entryPointService.getDroids(ctx arg LimitArg, ctx arg OffsetArg)),
         Field("cluster", OptionType(Cluster),
           arguments = Nil,
-          resolve = ctx => ctx.ctx.getCluster()),
+          resolve = ctx => ctx.ctx.entryPointService.getCluster()),
         Field("topics", ListType(Topic),
           arguments = Nil,
-          resolve = ctx => ctx.ctx.getTopics()),
+          resolve = ctx => ctx.ctx.entryPointService.getTopics()),
       ))
 
     Schema(query = Query, subscription = Some(SubscriptionType))

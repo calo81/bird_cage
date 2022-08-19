@@ -11,7 +11,7 @@ class KafkaConsumerTest extends munit.FunSuite {
       Property("group.id", "test_group")
     )
     )
-    new KafkaConsumerFactory().executeConsumer(properties, "topic1")
+    new KafkaConsumerFactory().executeConsumer(properties, "topic1" , "123")
   }
 
   test("example kafka consumer stream source") {
@@ -25,6 +25,6 @@ class KafkaConsumerTest extends munit.FunSuite {
     )
     val service = new EntryPointServiceImpl("localhost:9092",  new KafkaConsumerFactory())
 
-    service.eventStream.runForeach(println)
+    service.eventStream("123").runForeach(println)
   }
 }
