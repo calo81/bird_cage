@@ -6,6 +6,6 @@ class KafkaProducerTest extends munit.FunSuite {
       Property("bootstrap.servers", "localhost:9092"),
     )
     )
-    new KafkaProducerFactory().setupProducer(properties).produce("test_topic", "event_ii")
+    new KafkaProducerFactory().setupProducer(properties).produce("test_topic", """{"event": "event_ii"}""")
   }
 }

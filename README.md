@@ -2,7 +2,11 @@
 
 ### Usage
 
-From the roo directory
+From the root directory
+
+```bash
+docker-compose up
+```
 
 ```bash
 sbt run

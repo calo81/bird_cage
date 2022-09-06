@@ -25,6 +25,6 @@ class KafkaConsumerTest extends munit.FunSuite {
     )
     val service = new EntryPointServiceImpl("localhost:9092",  new KafkaConsumerFactory())
 
-    service.eventStream("123").runForeach(println)
+    service.eventStream("123", "*", "").runForeach(println)
   }
 }

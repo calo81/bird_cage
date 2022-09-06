@@ -1,6 +1,6 @@
 package org.cacique.kafka_happenings
 
-import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.consumer.{ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.common.errors.WakeupException
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.springframework.context.annotation.{Bean, Configuration}
@@ -21,7 +21,7 @@ class EventSupplier extends Supplier[Option[KafkaEvent]] {
     if (value == null) {
       return None
     }
-    println(s"Getting message from queue ${value.get.offset}")
+    println(s"Getting message from queue ${value.get.data}")
     value
   }
 
@@ -30,7 +30,7 @@ class EventSupplier extends Supplier[Option[KafkaEvent]] {
   }
 }
 
-case class ConsumerAndStream(consumer: KafkaConsumer[String, String], supplier: EventSupplier)
+case class ConsumerAndStream(consumer: KafkaConsumer[String, String], supplier: EventSupplier, stream: Option[java.util.stream.Stream[Option[KafkaEvent]]])
 
 @Component
 class KafkaConsumerFactory {
@@ -45,13 +45,17 @@ class KafkaConsumerFactory {
   private val thirtySecondRefresher = Executors.newScheduledThreadPool(1)
 
   thirtySecondRefresher.scheduleAtFixedRate(() => {
-    consumersAndStreamsPerClient.values().forEach(_.supplier.push(KafkaEvent("-1", "noEvent")))
+    consumersAndStreamsPerClient.values().forEach(_.supplier.push(KafkaEvent("-1", "{\"event\":\"noEvent\"}")))
   }, 10, 10, TimeUnit.SECONDS)
 
   def executeConsumer(properties: Properties, topic: String, clientId: String): Option[java.util.stream.Stream[Option[KafkaEvent]]] = {
     if (consumersAndStreamsPerClient.get(clientId) != null) {
+      println(s"Same client detected ${clientId}. Will kill current stream and return a new one")
       val supplier = consumersAndStreamsPerClient.get(clientId).supplier
-      return Some(java.util.stream.Stream.generate(supplier))
+      consumersAndStreamsPerClient.get(clientId).stream.foreach(_.close())
+      val newStream = Some(java.util.stream.Stream.generate(supplier))
+      consumersAndStreamsPerClient.put(clientId, consumersAndStreamsPerClient.get(clientId).copy(stream = newStream))
+      return newStream
     }
 
     println("WIll create a new consumer")
@@ -62,7 +66,7 @@ class KafkaConsumerFactory {
       consumer.subscribe(Collections.singletonList(topic))
       val supplier = new EventSupplier()
       val stream = consume(consumer, supplier)
-      consumersAndStreamsPerClient.put(clientId, ConsumerAndStream(consumer, supplier))
+      consumersAndStreamsPerClient.put(clientId, ConsumerAndStream(consumer, supplier, stream))
       return stream
     }.flatten
 
@@ -86,7 +90,7 @@ class ConsumerThread(consumer: KafkaConsumer[String, String], supplier: EventSup
     val timeout = Duration.ofMillis(100)
     try {
       while (true) {
-        val records = consumer.poll(timeout)
+        val records: ConsumerRecords[String, String] = consumer.poll(timeout)
 
         records.forEach { record =>
           supplier.push(KafkaEvent(record.offset().toString, record.value()))

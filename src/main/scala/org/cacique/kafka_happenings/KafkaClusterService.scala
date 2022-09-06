@@ -40,14 +40,21 @@ trait KafkaClusterService {
       .toList
   }
 
-  def eventStream(cookieValue: String): Source[KafkaEvent, NotUsed] = {
+  def eventStream(cookieValue: String, topic: String, filter: String): Source[KafkaEvent, NotUsed] = {
     val properties = Properties(List(
       Property("bootstrap.servers", "localhost:9092"),
       Property("group.id", s"kh_${cookieValue}")
     ))
     kafkaConsumer
       .executeConsumer(properties, "test_topic", cookieValue)
-      .map(s => Source.fromJavaStream(() => s).filter(_.isDefined).map(_.get))
+      .map(s => Source.fromJavaStream(() => s)
+        .filter(_.isDefined)
+        .map(_.get)
+        .filter { message =>
+          println(s"Filtering message with filter ${filter}")
+          message.data.contains(filter) || message.offset == "-1"
+        }
+      )
       .getOrElse(Source.fromIterator(() => List(KafkaEvent("1", "a"), KafkaEvent("2", "b")).iterator).buffer(1, OverflowStrategy.fail))
   }
 

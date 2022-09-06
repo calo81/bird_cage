@@ -147,20 +147,25 @@ object SchemaDefinition {
         "An event",
         () => fields[CharacterRepo, KafkaEvent](
           Field("offset", StringType,
-            Some("The name of the topic."),
+            Some("The offset of the event."),
             resolve = _.value.offset),
+          Field("data", StringType,
+            Some("The content of the event."),
+            resolve = _.value.data),
         ))
 
     val ID: Argument[String] = Argument("id", StringType, description = "id of the character")
 
     val TOPIC: Argument[String] = Argument("topic", StringType, description = "topic to subscribe to")
 
+    val FILTER: Argument[String] = Argument("filter", StringType, description = "filter for messages")
+
     val SubscriptionType = ObjectType("Subscription", fields[RequestContext, Unit](
       Field.subs("kafkaEvents",
         KafkaEventType,
-        arguments = TOPIC :: Nil,
+        arguments = TOPIC :: FILTER :: Nil,
         resolve = (c: Context[RequestContext, Unit]) =>
-        c.ctx.eventStream.map(event => Action(event))
+        c.ctx.eventStream(c arg TOPIC, c arg FILTER).map(event => Action(event))
       )
     )
     )
