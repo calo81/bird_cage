@@ -40,13 +40,13 @@ trait KafkaClusterService {
       .toList
   }
 
-  def eventStream(cookieValue: String, topic: String, filter: String): Source[KafkaEvent, NotUsed] = {
+  def eventStream(cookieValue: String, topic: String, filter: String, offset: String): Source[KafkaEvent, NotUsed] = {
     val properties = Properties(List(
       Property("bootstrap.servers", "localhost:9092"),
       Property("group.id", s"kh_${cookieValue}")
     ))
     kafkaConsumer
-      .executeConsumer(properties, "test_topic", cookieValue)
+      .executeConsumer(properties, "test_topic", cookieValue, offset)
       .map(s => Source.fromJavaStream(() => s)
         .filter(_.isDefined)
         .map(_.get)

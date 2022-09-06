@@ -1,20 +1,8 @@
 package org.cacique.kafka_happenings
 
-import akka.actor.ActorSystem
-import sangria.execution.deferred.{Fetcher, HasId}
-import sangria.schema._
-import sangria.macros.derive._
-import sangria.streaming.akkaStreams._
-import akka.stream.{ActorMaterializer, Materializer}
-import akka.util.Timeout
-import sangria.execution.UserFacingError
-import sangria.schema._
-import sangria.macros.derive._
-import akka.pattern.ask
 import akka.stream.Materializer
 import sangria.execution.deferred.{Fetcher, HasId}
-
-import scala.concurrent.ExecutionContext
+import sangria.schema._
 import sangria.streaming.akkaStreams._
 
 import scala.concurrent.Future
@@ -160,12 +148,15 @@ object SchemaDefinition {
 
     val FILTER: Argument[String] = Argument("filter", StringType, description = "filter for messages")
 
+    val OFFSET: Argument[String] = Argument("offset", StringType, description = "read from offset")
+
+
     val SubscriptionType = ObjectType("Subscription", fields[RequestContext, Unit](
       Field.subs("kafkaEvents",
         KafkaEventType,
-        arguments = TOPIC :: FILTER :: Nil,
+        arguments = TOPIC :: FILTER :: OFFSET :: Nil,
         resolve = (c: Context[RequestContext, Unit]) =>
-        c.ctx.eventStream(c arg TOPIC, c arg FILTER).map(event => Action(event))
+        c.ctx.eventStream(c arg TOPIC, c arg FILTER, c arg OFFSET).map(event => Action(event))
       )
     )
     )

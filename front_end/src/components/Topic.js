@@ -7,11 +7,18 @@ import ReactJson from "react-json-view";
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import Title from './Title';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
 
 const GET_TOPIC = gql`
 
-subscription KafkaEvents($topic: String!, $filter: String!) {
-  kafkaEvents(topic: $topic, filter: $filter) {
+subscription KafkaEvents($topic: String!, $filter: String!, $offset: String!) {
+  kafkaEvents(topic: $topic, filter: $filter, offset: $offset) {
     offset
     data
   }
@@ -25,7 +32,11 @@ export default function Topic(props) {
         console.log(topic)
         console.log(filter)
         if (data.subscriptionData.data.kafkaEvents.offset != "-1") {
-            events.push(data.subscriptionData.data)
+            console.log("Data received from frontend " + data.subscriptionData.data.kafkaEvents.offset)
+            if (!events.map(event => event.kafkaEvents.offset).includes(data.subscriptionData.data.kafkaEvents.offset)) {
+                events.push(data.subscriptionData.data)
+            }
+
         }
         setEvents(events)
 
@@ -48,16 +59,29 @@ export default function Topic(props) {
         setFilterOnView(event.target.value)
     }
 
+    function handleOffset(event) {
+        setOffset(event.target.value)
+    }
+
     function shouldFilterViewItem(data) {
         return data.toString().includes(filterOnView)
+    }
+
+    function offsetSorter(a, b) {
+        if (a.kafkaEvents.offset < b.kafkaEvents.offset){
+            return -1
+        } else{
+            return 1
+        }
     }
 
     const [events, setEvents] = useState([]);
     const [topic, setTopic] = useState("*")
     const [filter, setFilter] = useState("")
     const [filterOnView, setFilterOnView] = useState("")
+    const [offset, setOffset] = useState("")
     const {loading, error, data} = useSubscription(GET_TOPIC, {
-        variables: {topic: topic, filter: filter},
+        variables: {topic: topic, filter: filter, offset: offset},
         shouldResubscribe: true,
         skip: false,
         onSubscriptionData: addData
@@ -89,22 +113,44 @@ export default function Topic(props) {
                     Filter on View &nbsp;
                     <input type="text" value={filterOnView} onChange={handleFilterOnViewChange}/>
                 </label>
+                <label>
+                    From Offset &nbsp;
+                    <input type="text" value={offset} onChange={handleOffset}/>
+                </label>
                 {/*<input type="submit" value="Submit" />*/}
             </form>
         </div>
         <div>
-            <h4>{events.filter(event => shouldFilterViewItem(event.kafkaEvents.data)).map(event =>
-                (
+            <TableContainer component={Paper}>
+                <Table sx={{minWidth: 100}} aria-label="simple table">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell align="right">Offset</TableCell>
+                            <TableCell align="left">Data</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {events.filter(event => shouldFilterViewItem(event.kafkaEvents.data)).sort(offsetSorter).map(event =>
+                            (
+                                <TableRow
+                                    key={event.kafkaEvents.offset}
+                                    sx={{'&:last-child td, &:last-child th': {border: 0}}}
+                                >
+                                    <TableCell align="right">{event.kafkaEvents.offset}</TableCell>
+                                    <TableCell align="left">
+                                        <ReactJson
+                                            src={JSON.parse(event.kafkaEvents.data)}
+                                            name={false}
+                                            theme="apathy:inverted"
+                                            collapsed={true}
+                                        />
+                                    </TableCell>
+                                </TableRow>
 
-                    <div key={event.kafkaEvents.offset}>
-                        <ReactJson
-                            src={JSON.parse(event.kafkaEvents.data)}
-                            name={false}
-                            theme="apathy:inverted"
-                            collapsed={true}
-                        />
-                    </div>
-                ))}</h4>
+                            ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
         <div>
             <div>

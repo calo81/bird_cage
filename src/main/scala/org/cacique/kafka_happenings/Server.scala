@@ -105,7 +105,7 @@ class Server(@Autowired service: EntryPointServiceImpl) extends CorsSupport with
                               .map { preparedQuery ⇒
                                 ToResponseMarshallable(preparedQuery.execute()
                                   .map { result ⇒
-//                                    println(s"Found result ${result}")
+                                    println(s"Returning Record to Front End")
                                     ServerSentEvent(result.noSpaces, eventType = Some("next"))
                                   }
                                   .recover { case NonFatal(error) ⇒
